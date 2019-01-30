@@ -1,0 +1,8 @@
+[program:telegraf]
+user=telegraf
+command={{ telegraf_install_dir }}/{{ telegraf_version }}/bin/telegraf
+autostart=true
+autorestart=true
+#environment=JAVA_HOME={{ java_install_dir }}/{{ java_version }},ES_HEAP_SIZE={{ telegraf_heap_size }},ES_PATH_CONF={{ telegraf_install_dir }}/{{ telegraf_version }}/config/{{ telegraf_instance_name }}
+stdout_logfile={{ telegraf_install_dir }}/{{ telegraf_version }}/logs/telegraf-{{ telegraf_instance_name }}.out.log
+stderr_logfile={{ telegraf_install_dir }}/{{ telegraf_version }}/logs/telegraf-{{ telegraf_instance_name }}.err.log

@@ -1,0 +1,60 @@
+---
+- name: create dir {{ telegraf_install_dir }}
+  file:
+    path: "{{ telegraf_install_dir }}"
+    state: directory
+    owner: "{{ telegraf_user }}"
+    group: "{{ telegraf_group }}"
+    mode: 0755
+
+- name: create dir {{ telegraf_install_dir }}/{{ telegraf_version }}
+  file:
+    path: "{{ telegraf_install_dir }}/{{ telegraf_version }}"
+    state: directory
+    owner: "{{ telegraf_user }}"
+    group: "{{ telegraf_group }}"
+    mode: 0755
+
+- name: Extract {{ telegraf_install_tar }} into {{ telegraf_install_dir }}/{{ telegraf_version }}
+  unarchive:
+    src: "{{ telegraf_install_tar }}"
+    dest: "{{ telegraf_install_dir }}/{{ telegraf_version }}"
+    owner: "{{ telegraf_user }}"
+    group: "{{ telegraf_group }}"
+    extra_opts: [--strip-components=1]
+
+- name: "Copy the telegraf config"
+  template:
+    src: telegraf.conf.j2
+    dest: /etc/telegraf/telegraf.conf
+    owner: telegraf
+    group: telegraf
+    mode: 0640
+
+- name: "Create telegraf extra plugin path"
+  file:
+    state: directory
+    path: "/etc/telegraf/telegraf.d/"
+    owner: telegraf
+    group: telegraf
+    mode: 0755
+
+- name: "Copy telegraf extra plugins"
+  template:
+    src: "telegraf-extra-plugin.conf.j2"
+    dest: "/etc/telegraf/telegraf.d/{{ item.key }}.conf"
+    owner: telegraf
+    group: telegraf
+    mode: 0640
+  with_dict: "{{ telegraf_plugins_extra }}"
+  loop_control:
+    label: "{{ item.key }}"
+  when:
+    - telegraf_plugins_extra is defined
+    - telegraf_plugins_extra is iterable
+    - item.value.state|default('present') != 'absent'
+  become: yes
+  notify:
+    - Restart Telegraf
+    - Restart Telegraf container
+
